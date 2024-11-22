@@ -24,14 +24,16 @@ from ..libraries.maimaidx_error import *
 from ..libraries.maimaidx_model import Alias
 from ..libraries.maimaidx_music import alias, mai, update_local_alias
 
+from ....permission import perm_maimai
+
 update_alias        = on_command('更新别名库', priority=5, permission=SUPERUSER)
-alias_local_apply   = on_command('添加本地别名', aliases={'添加本地别称'}, priority=5)
-alias_apply         = on_command('添加别名', aliases={'增加别名', '增添别名', '添加别称'}, priority=5)
-alias_agree         = on_command('同意别名', aliases={'同意别称'}, priority=5)
-alias_status        = on_command('当前投票', aliases={'当前别名投票', '当前别称投票'}, priority=5)
+alias_local_apply   = on_command('添加本地别名', aliases={'添加本地别称'}, priority=5, permission=perm_maimai)
+alias_apply         = on_command('添加别名', aliases={'增加别名', '增添别名', '添加别称'}, priority=5, permission=perm_maimai)
+alias_agree         = on_command('同意别名', aliases={'同意别称'}, priority=5, permission=perm_maimai)
+alias_status        = on_command('当前投票', aliases={'当前别名投票', '当前别称投票'}, priority=5, permission=perm_maimai)
 alias_switch        = on_endswith(('别名推送', '别称推送'), priority=5, permission=SUPERUSER)
 alias_global_switch = on_regex(r'^全局([开启关闭]+)别名推送$', priority=5, permission=SUPERUSER)
-alias_song          = on_regex(r'^(id)?\s?(.+)\s?有什么别[名称]$', re.IGNORECASE, priority=5)
+alias_song          = on_regex(r'^(id)?\s?(.+)\s?有什么别[名称]$', re.IGNORECASE, priority=5, permission=perm_maimai)
 
 
 @update_alias.handle()
