@@ -6,6 +6,7 @@ from nonebot.adapters.onebot.v11 import Message, MessageSegment
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg, Depends
 
+from ...permission import perm_maimai
 from ..config import log
 from ..core.database.qq import User
 from ..core.handler import draw_best50, draw_play_data, draw_song_galobal_data
@@ -14,11 +15,19 @@ from ..core.merge.models import ServiceName
 from ..core.service import mai
 from .depend import GetUserAndAuth
 
-best50 = on_command("b50", aliases={"B50"})
-ap50 = on_command("ap50", aliases={"AP50"})
-info = on_command("info", aliases={"minfo", "Minfo", "MINFO", "info", "Info", "INFO"})
-ginfo = on_command("ginfo", aliases={"ginfo", "Ginfo", "GINFO"})
-score = on_command("分数线")
+best50 = on_command("b50", aliases={"B50"}, permission=perm_maimai, priority=1, block=True)
+ap50 = on_command("ap50", aliases={"AP50"}, permission=perm_maimai, priority=1, block=True)
+info = on_command(
+    "info",
+    aliases={"minfo", "Minfo", "MINFO", "info", "Info", "INFO"},
+    permission=perm_maimai,
+    priority=1,
+    block=True,
+)
+ginfo = on_command(
+    "ginfo", aliases={"ginfo", "Ginfo", "GINFO"}, permission=perm_maimai, priority=1, block=True
+)
+score = on_command("分数线", permission=perm_maimai, priority=1, block=True)
 
 
 @best50.handle()

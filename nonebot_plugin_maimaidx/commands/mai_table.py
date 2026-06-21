@@ -8,6 +8,7 @@ from nonebot.params import Depends, RegexMatched
 from nonebot.permission import SUPERUSER
 from PIL import Image
 
+from ...permission import perm_maimai
 from ..constants import COMBO_PLUS, LEVEL_LIST, PLATE_CN, RANK_PLUS, SYNC_PLUS
 from ..core.database.qq import User
 from ..core.handler import (
@@ -39,15 +40,19 @@ CATEGORY_ALIAS = {
 }
 
 
-update_table = on_fullmatch("更新定数表", permission=SUPERUSER)
-update_plate = on_fullmatch("更新完成表", permission=SUPERUSER)
-rating_table = on_regex(r"([0-9]+\+?)定数表")
-rating_table_pfm = on_regex(RATING_PATTERN, re.IGNORECASE)
-plate_table_condition = on_fullmatch("牌子条件")
-plate_table_pfm = on_regex(TABLE_PATTERN.format("完成"))
-plate_progress = on_regex(TABLE_PATTERN.format("进度"))
-level_progress = on_regex(LEVEL_PATTERN, re.IGNORECASE)
-level_score_list = on_regex(LEVEL_LIST_PATTERN)
+update_table = on_fullmatch("更新定数表", permission=SUPERUSER, priority=1, block=True)
+update_plate = on_fullmatch("更新完成表", permission=SUPERUSER, priority=1, block=True)
+rating_table = on_regex(r"([0-9]+\+?)定数表", permission=perm_maimai, priority=10, block=True)
+rating_table_pfm = on_regex(
+    RATING_PATTERN, re.IGNORECASE, permission=perm_maimai, priority=10, block=True
+)
+plate_table_condition = on_fullmatch("牌子条件", permission=perm_maimai, priority=1, block=True)
+plate_table_pfm = on_regex(TABLE_PATTERN.format("完成"), permission=perm_maimai, priority=1, block=True)
+plate_progress = on_regex(TABLE_PATTERN.format("进度"), permission=perm_maimai, priority=1, block=True)
+level_progress = on_regex(
+    LEVEL_PATTERN, re.IGNORECASE, permission=perm_maimai, priority=10, block=True
+)
+level_score_list = on_regex(LEVEL_LIST_PATTERN, permission=perm_maimai, priority=1, block=True)
 
 
 @update_table.handle()

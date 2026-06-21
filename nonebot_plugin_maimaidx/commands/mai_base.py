@@ -14,6 +14,7 @@ from nonebot.params import Arg, CommandArg, Depends, RegexMatched
 from nonebot.permission import SUPERUSER
 from PIL import Image
 
+from ...permission import perm_maimai
 from ..config import lxnsconfig, maiconfig
 from ..constants import FORTUNE, LEVEL_LIST
 from ..core.clients.divingfish.client import DivingFishAPI
@@ -58,20 +59,34 @@ AUTHORIZE_MSG = dedent(f"""
 LXNS_ERROR = "BOT管理员尚未配置落雪查分器相关信息"
 
 
-update_data = on_command("更新maimai数据", permission=SUPERUSER)
-help = on_command("帮助maimaiDX", aliases={"帮助maimaidx"})
-maimaidxrepo = on_command("项目地址maimaiDX", aliases={"项目地址maimaidx"})
-bind = on_command("lxbind", aliases={"绑定落雪", "绑定lx"})
-source = on_command("数据源")
-theme = on_command("主题")
-portune = on_command("今日舞萌")
-mai_what = on_regex(r".*mai.*什么(.+)?")
-random_song = on_regex(
-    r"^[随来给]个((?:dx|sd|标准))?([绿黄红紫白]?)([0-9]+\+?).*", re.IGNORECASE
+update_data = on_command(
+    "更新maimai数据", permission=SUPERUSER, priority=1, block=True
 )
-rise_score = on_regex(r"^我要在?([0-9]+\+?)?[上加\+]([0-9]+)?分\s?(.+)?")
-rating_ranking = on_command("查看排名")
-my_rating_ranking = on_command("我的排名")
+help = on_command(
+    "帮助maimaiDX", aliases={"帮助maimaidx"}, permission=perm_maimai, priority=1, block=True
+)
+bind = on_command(
+    "lxbind", aliases={"绑定落雪", "绑定lx"}, permission=perm_maimai, priority=1, block=True
+)
+source = on_command("数据源", permission=perm_maimai, priority=1, block=True)
+theme = on_command("主题", permission=perm_maimai, priority=1, block=True)
+portune = on_command("今日舞萌", permission=perm_maimai, priority=1, block=True)
+mai_what = on_regex(r".*mai.*什么(.+)?", permission=perm_maimai, priority=20, block=True)
+random_song = on_regex(
+    r"^[随来给]个((?:dx|sd|标准))?([绿黄红紫白]?)([0-9]+\+?).*",
+    re.IGNORECASE,
+    permission=perm_maimai,
+    priority=10,
+    block=True,
+)
+rise_score = on_regex(
+    r"^我要在?([0-9]+\+?)?[上加\+]([0-9]+)?分\s?(.+)?",
+    permission=perm_maimai,
+    priority=20,
+    block=True,
+)
+rating_ranking = on_command("查看排名", permission=perm_maimai, priority=1, block=True)
+my_rating_ranking = on_command("我的排名", permission=perm_maimai, priority=1, block=True)
 
 
 @update_data.handle()
@@ -84,17 +99,6 @@ async def _(event: PrivateMessageEvent):
 async def _():
     await help.finish(
         MessageSegment.image(image_to_base64(Image.open(Root / "maimaidxhelp.png"))),
-        reply_message=True,
-    )
-
-
-@maimaidxrepo.handle()
-async def _():
-    await maimaidxrepo.finish(
-        (
-            "项目地址：https://github.com/Yuri-YuzuChaN/nonebot-plugin-maimaidx"
-            "\n求star，求宣传~"
-        ),
         reply_message=True,
     )
 

@@ -8,7 +8,6 @@ driver = get_driver()
 class BaseConfig(BaseModel):
     maimaidx_path: str
     maimaidx_alias_proxy: bool = False
-    maimaidx_alias_push: bool = True
     save_in_memory: bool | None = True
     assets_online: bool | None = True
     bot_name: str = (

@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 
 import nonebot
@@ -6,11 +5,10 @@ from nonebot.plugin import PluginMetadata, require
 
 from . import commands as commands
 from .config import BaseConfig, dfconfig, driver, log, lxnsconfig, maiconfig
-from .core.alias_ws_push import ws_alias_server
 from .core.clients.divingfish.client import DivingFishAPI
 from .core.database.qq import create_database
 from .core.image import AssetsImage
-from .core.service import guess, mai
+from .core.service import mai
 from .resources import plate_table_dir, rating_table_dir
 
 scheduler = require("nonebot_plugin_apscheduler")
@@ -44,20 +42,12 @@ async def get_music():
     if maiconfig.maimaidx_alias_proxy:
         log.info("使用代理服务器访问「柚子」别名服务器")
 
-    if maiconfig.maimaidx_alias_push:
-        log.opt(colors=True).info("别名推送为「<g>开启</g>」状态")
-        asyncio.ensure_future(ws_alias_server())
-    else:
-        log.opt(colors=True).info("别名推送为「<r>关闭</r>」状态")
-
     log.info("正在获取maimai曲目数据")
     await mai.get_music()
     log.info("正在获取maimai曲目别名数据")
     await mai.get_music_alias()
     log.info("正在获取maimai牌子数据")
     await mai.get_plate_json()
-    guess.guess()
-    log.success("猜歌数据初始化完成")
     log.success("maimai数据获取完成")
 
     if dfconfig.divingfish_token is None:

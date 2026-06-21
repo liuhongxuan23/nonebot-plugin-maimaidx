@@ -5,6 +5,7 @@ from nonebot import on_regex
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot.params import Depends, RegexMatched
 
+from ...permission import perm_maimai
 from ..core.clients.yuzuchan.client import YuzuChaNAPI
 from ..core.clients.yuzuchan.models import AliasStatus, Songs, StatusEnum
 from ..core.database.qq import User
@@ -14,9 +15,23 @@ from ..core.merge.models import Song
 from ..core.service import mai
 from .depend import GetUserAndAuthOrNone, process_regex
 
-search = on_regex(r"^(定数|bpm|曲师|谱师)?查歌\s?(.+)", re.IGNORECASE)
-search_alias_song = on_regex(r"(.+)是(?:什么|啥)歌[？?]?([0-9]+)?$", re.IGNORECASE)
-query_chart = on_regex(r"^id\s?([0-9]+)$", re.IGNORECASE)
+search = on_regex(
+    r"^(定数|bpm|曲师|谱师)?查歌\s?(.+)",
+    re.IGNORECASE,
+    permission=perm_maimai,
+    priority=1,
+    block=True,
+)
+search_alias_song = on_regex(
+    r"(.+)是(?:什么|啥)歌[？?]?([0-9]+)?$",
+    re.IGNORECASE,
+    permission=perm_maimai,
+    priority=10,
+    block=True,
+)
+query_chart = on_regex(
+    r"^id\s?([0-9]+)$", re.IGNORECASE, permission=perm_maimai, priority=1, block=True
+)
 
 
 @search.handle()

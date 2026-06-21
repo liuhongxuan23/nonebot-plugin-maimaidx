@@ -5,9 +5,6 @@ from textwrap import dedent
 
 from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
-    GROUP_ADMIN,
-    GROUP_OWNER,
-    Bot,
     GroupMessageEvent,
     Message,
     MessageSegment,
@@ -16,25 +13,35 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.params import CommandArg, RegexMatched
 from nonebot.permission import SUPERUSER
 
+from ...permission import perm_maimai
 from ..config import log
 from ..constants import SONGS_PER_PAGE
 from ..core.clients.yuzuchan.client import YuzuChaNAPI
 from ..core.clients.yuzuchan.models import Alias
 from ..core.image.tools import text_to_bytes_io
-from ..core.service import alias, mai, update_local_alias
+from ..core.service import mai
 
-update_alias = on_command("更新别名库", permission=SUPERUSER)
-alias_local_apply = on_command("添加本地别名", aliases={"添加本地别称"})
+update_alias = on_command("更新别名库", permission=SUPERUSER, priority=1, block=True)
 alias_apply = on_command(
-    "添加别名", aliases={"申请别名", "增加别名", "增添别名", "添加别称"}
+    "添加别名",
+    aliases={"申请别名", "增加别名", "增添别名", "添加别称"},
+    permission=perm_maimai,
+    priority=1,
+    block=True,
 )
-alias_agree = on_command("同意别名", aliases={"同意别称"})
-alias_status = on_command("当前投票", aliases={"当前别名投票", "当前别称投票"})
-alias_switch = on_regex(
-    r"^(开启|关闭)别名推送$", permission=SUPERUSER | GROUP_OWNER | GROUP_ADMIN
+alias_agree = on_command(
+    "同意别名", aliases={"同意别称"}, permission=perm_maimai, priority=1, block=True
 )
-alias_global_switch = on_regex(r"^全局(开启|关闭)别名推送$", permission=SUPERUSER)
-alias_song = on_regex(r"^(id(?=[\s0-9]))?\s?(.+)\s?有什么别[名称]$", re.IGNORECASE)
+alias_status = on_command(
+    "当前投票", aliases={"当前别名投票", "当前别称投票"}, permission=perm_maimai, priority=1, block=True
+)
+alias_song = on_regex(
+    r"^(id(?=[\s0-9]))?\s?(.+)\s?有什么别[名称]$",
+    re.IGNORECASE,
+    permission=perm_maimai,
+    priority=10,
+    block=True,
+)
 
 
 @update_alias.handle()
@@ -46,39 +53,6 @@ async def _(event: PrivateMessageEvent):
     except Exception:
         log.error("手动更新别名库失败")
         await update_alias.send("手动更新别名库失败")
-
-
-@alias_local_apply.handle()
-async def _(message: Message = CommandArg()):
-    args = message.extract_plain_text().strip().split()
-    if len(args) != 2:
-        await alias_local_apply.finish("参数错误", reply_message=True)
-    song_id, alias_name = args
-    if song_id.isdigit():
-        song_id = int(song_id)
-    else:
-        await alias_local_apply.finish("请输入正确的ID", reply_message=True)
-    if not mai.total_list.by_id(song_id):
-        await alias_local_apply.finish(
-            f"未找到ID「{song_id}」的曲目", reply_message=True
-        )
-    api = YuzuChaNAPI()
-    server_exist = await api.get_aliases(song_id=song_id)
-    if isinstance(server_exist, Alias) and alias_name.lower() in server_exist.alias:
-        await alias_local_apply.finish(
-            f"该曲目的别名「{alias_name}」已存在别名服务器", reply_message=True
-        )
-
-    local_exist = mai.total_alias_list.by_id(song_id)
-    if local_exist and alias_name.lower() in local_exist[0].alias:
-        await alias_local_apply.finish("本地别名库已存在该别名", reply_message=True)
-
-    issave = await update_local_alias(song_id, alias_name)
-    if not issave:
-        msg = "添加本地别名失败"
-    else:
-        msg = f"已成功为ID「{song_id}」添加别名「{alias_name}」到本地别名库"
-    await alias_local_apply.send(msg, reply_message=True)
 
 
 @alias_apply.handle()
@@ -207,29 +181,3 @@ async def _(match: Match[str] = RegexMatched()):
     msg = f"该曲目有以下别名：\nID：{aliases[0].song_id}\n"
     msg += "\n".join(real_aliases)
     await alias_song.send(msg, reply_message=True)
-
-
-@alias_switch.handle()
-async def _(event: GroupMessageEvent, match: Match[str] = RegexMatched()):
-    if match.group(1) == "开启":
-        msg = await alias.on(event.group_id)
-    elif match.group(1) == "关闭":
-        msg = await alias.off(event.group_id)
-    else:
-        raise ValueError("matcher type error")
-
-    await alias_switch.finish(msg, reply_message=True)
-
-
-@alias_global_switch.handle()
-async def _(bot: Bot, match: Match[str] = RegexMatched()):
-    group = await bot.get_group_list()
-    group_id = [g["group_id"] for g in group]
-    if match.group(1) == "开启":
-        await alias.alias_global_change(True, group_id)
-        await alias_global_switch.finish("已全局开启maimai别名推送")
-    elif match.group(1) == "关闭":
-        await alias.alias_global_change(False, group_id)
-        await alias_global_switch.finish("已全局关闭maimai别名推送")
-    else:
-        return
